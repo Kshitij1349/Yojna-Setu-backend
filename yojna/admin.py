@@ -1,6 +1,33 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Farmer, Scheme, Notification
+from .models import Farmer, Scheme, Notification, WatchHistory, WatchLater
+from django import forms
+
+
+
+
+class SchemeAdminForm(forms.ModelForm):
+    target_districts = forms.MultipleChoiceField(
+        choices=Farmer.DISTRICT_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
+        required=True,
+        help_text="Select all districts where this scheme is applicable"
+    )
+    
+    class Meta:
+        model = Scheme
+        fields = '__all__'
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk and self.instance.target_districts:
+            self.initial['target_districts'] = self.instance.target_districts
+    
+    def clean_target_districts(self):
+        return list(self.cleaned_data['target_districts'])
+
+
+
 
 # Register your models here.
 @admin.register(Farmer)
@@ -23,31 +50,24 @@ class FarmerAdmin(UserAdmin):
 
 @admin.register(Scheme)
 class SchemeAdmin(admin.ModelAdmin):
-    # Columns to show in the list view
+    # form = SchemeAdminForm  # ← REMOVE THIS LINE
+    
     list_display = ('title', 'category', 'is_active', 'created_date')
-    
-    # Sidebar filters
     list_filter = ('category', 'is_active', 'created_date')
-    
-    # Search box for title and description
     search_fields = ('title', 'description')
     
-    # Field grouping in the edit form
     fieldsets = (
         ('General Information', {
             'fields': ('title', 'description', 'category')
         }),
-        ('Targeting & Media', {
-            'fields': ('target_districts', 'video_url')
+        ('Media & Benefits', {
+            'fields': ('video_url', 'thumbnail', 'benefit_amount', 'apply_url')
         }),
         ('Status', {
             'fields': ('is_active',)
         }),
     )
-
-    # Optional: If you want to show the JSONField as a list of checkboxes 
-    # (Requires a bit more customization, but this default will work for now)
-
+    
 
 
 @admin.register(Notification)
@@ -57,3 +77,28 @@ class NotificationAdmin(admin.ModelAdmin):
     search_fields = ('farmer__username', 'scheme__title', 'farmer__phone')
     # Prevent manual editing of timestamps for integrity
     readonly_fields = ('sent_at', 'viewed_at')
+
+    list_display = ('farmer', 'scheme', 'sent_at', 'viewed', 'viewed_at')  # Changed viewed → opened
+    list_filter = ('viewed', 'sent_at')  # Changed viewed → opened
+
+
+
+
+@admin.register(WatchHistory)
+class WatchHistoryAdmin(admin.ModelAdmin):
+    list_display = ['farmer', 'scheme', 'started_at', 'last_watched_at', 'completed', 'watch_duration_seconds']
+    list_filter = ['completed', 'started_at']
+    search_fields = ['farmer__username', 'scheme__title']
+    date_hierarchy = 'started_at'
+    readonly_fields = ['started_at', 'last_watched_at']
+
+
+
+
+@admin.register(WatchLater)
+class WatchLaterAdmin(admin.ModelAdmin):
+    list_display = ['farmer', 'scheme', 'saved_at']
+    list_filter = ['saved_at']
+    search_fields = ['farmer__username', 'scheme__title']
+    date_hierarchy = 'saved_at'
+    readonly_fields = ['saved_at']

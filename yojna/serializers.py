@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Farmer, Scheme, Notification
+from .models import Farmer, Scheme, Notification, WatchLater, WatchHistory
 
 class FarmerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,9 +20,18 @@ class FarmerSerializer(serializers.ModelSerializer):
         return user
 
 class SchemeSerializer(serializers.ModelSerializer):
+    thumbnail_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Scheme
         fields = '__all__'
+
+    def get_thumbnail_url(self, obj):
+        if obj.thumbnail:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.thumbnail.url)
+        return None
 
 class NotificationSerializer(serializers.ModelSerializer):
     scheme = SchemeSerializer(read_only=True)
@@ -30,3 +39,31 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = '__all__'
+
+
+class WatchHistorySerializer(serializers.ModelSerializer):
+    scheme = SchemeSerializer(read_only=True)
+    scheme_id = serializers.PrimaryKeyRelatedField(
+        queryset=Scheme.objects.all(), 
+        source='scheme', 
+        write_only=True
+    )
+    
+    class Meta:
+        model = WatchHistory
+        fields = ['id', 'scheme', 'scheme_id', 'started_at', 'last_watched_at', 
+                  'completed', 'watch_duration_seconds']
+        read_only_fields = ['started_at', 'last_watched_at']
+
+class WatchLaterSerializer(serializers.ModelSerializer):
+    scheme = SchemeSerializer(read_only=True)
+    scheme_id = serializers.PrimaryKeyRelatedField(
+        queryset=Scheme.objects.all(), 
+        source='scheme', 
+        write_only=True
+    )
+    
+    class Meta:
+        model = WatchLater
+        fields = ['id', 'scheme', 'scheme_id', 'saved_at']
+        read_only_fields = ['saved_at']

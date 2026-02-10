@@ -73,44 +73,44 @@ class Scheme(models.Model):
     ]
 
     # Reference the same districts used in your Farmer model for consistency
-    DISTRICT_CHOICES = [
-        ('AHMEDNAGAR', 'Ahmednagar (Ahilyanagar)'),
-        ('AKOLA', 'Akola'),
-        ('AMRAVATI', 'Amravati'),
-        ('AURANGABAD', 'Aurangabad (Chhatrapati Sambhajinagar)'),
-        ('BEED', 'Beed'),
-        ('BHANDARA', 'Bhandara'),
-        ('BULDHANA', 'Buldhana'),
-        ('CHANDRAPUR', 'Chandrapur'),
-        ('DHULE', 'Dhule'),
-        ('GADCHIROLI', 'Gadchiroli'),
-        ('GONDIA', 'Gondia'),
-        ('HINGOLI', 'Hingoli'),
-        ('JALGAON', 'Jalgaon'),
-        ('JALNA', 'Jalna'),
-        ('KOLHAPUR', 'Kolhapur'),
-        ('LATUR', 'Latur'),
-        ('MUMBAI_CITY', 'Mumbai City'),
-        ('MUMBAI_SUBURBAN', 'Mumbai Suburban'),
-        ('NAGPUR', 'Nagpur'),
-        ('NANDED', 'Nanded'),
-        ('NANDURBAR', 'Nandurbar'),
-        ('NASHIK', 'Nashik'),
-        ('OSMANABAD', 'Osmanabad (Dharashiv)'),
-        ('PALGHAR', 'Palghar'),
-        ('PARBHANI', 'Parbhani'),
-        ('PUNE', 'Pune'),
-        ('RAIGAD', 'Raigad'),
-        ('RATNAGIRI', 'Ratnagiri'),
-        ('SANGLI', 'Sangli'),
-        ('SATARA', 'Satara'),
-        ('SINDHUDURG', 'Sindhudurg'),
-        ('SOLAPUR', 'Solapur'),
-        ('THANE', 'Thane'),
-        ('WARDHA', 'Wardha'),
-        ('WASHIM', 'Washim'),
-        ('YAVATMAL', 'Yavatmal'),
-    ]
+    # DISTRICT_CHOICES = [
+    #     ('AHMEDNAGAR', 'Ahmednagar (Ahilyanagar)'),
+    #     ('AKOLA', 'Akola'),
+    #     ('AMRAVATI', 'Amravati'),
+    #     ('AURANGABAD', 'Aurangabad (Chhatrapati Sambhajinagar)'),
+    #     ('BEED', 'Beed'),
+    #     ('BHANDARA', 'Bhandara'),
+    #     ('BULDHANA', 'Buldhana'),
+    #     ('CHANDRAPUR', 'Chandrapur'),
+    #     ('DHULE', 'Dhule'),
+    #     ('GADCHIROLI', 'Gadchiroli'),
+    #     ('GONDIA', 'Gondia'),
+    #     ('HINGOLI', 'Hingoli'),
+    #     ('JALGAON', 'Jalgaon'),
+    #     ('JALNA', 'Jalna'),
+    #     ('KOLHAPUR', 'Kolhapur'),
+    #     ('LATUR', 'Latur'),
+    #     ('MUMBAI_CITY', 'Mumbai City'),
+    #     ('MUMBAI_SUBURBAN', 'Mumbai Suburban'),
+    #     ('NAGPUR', 'Nagpur'),
+    #     ('NANDED', 'Nanded'),
+    #     ('NANDURBAR', 'Nandurbar'),
+    #     ('NASHIK', 'Nashik'),
+    #     ('OSMANABAD', 'Osmanabad (Dharashiv)'),
+    #     ('PALGHAR', 'Palghar'),
+    #     ('PARBHANI', 'Parbhani'),
+    #     ('PUNE', 'Pune'),
+    #     ('RAIGAD', 'Raigad'),
+    #     ('RATNAGIRI', 'Ratnagiri'),
+    #     ('SANGLI', 'Sangli'),
+    #     ('SATARA', 'Satara'),
+    #     ('SINDHUDURG', 'Sindhudurg'),
+    #     ('SOLAPUR', 'Solapur'),
+    #     ('THANE', 'Thane'),
+    #     ('WARDHA', 'Wardha'),
+    #     ('WASHIM', 'Washim'),
+    #     ('YAVATMAL', 'Yavatmal'),
+    # ]
 
     title = models.CharField(max_length=255)
     description = models.TextField()
@@ -119,10 +119,13 @@ class Scheme(models.Model):
     
     # Target districts: multiple selection allowed
     # Note: Using a TextField or a separate M2M model is better for multiple districts
-    target_districts = models.JSONField(help_text="List of districts where this scheme is applicable")
+    #target_districts = models.JSONField(help_text="List of districts where this scheme is applicable")
     
     created_date = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    benefit_amount = models.CharField(max_length=100, blank=True, help_text="e.g., ₹6,000/वर्ष or 50% सब्सिडी")
+    apply_url = models.URLField(max_length=500, blank=True, null=True, help_text="Official government application link")
+    thumbnail = models.ImageField(upload_to='scheme_thumbnails/', blank=True, null=True)
 
     class Meta:
         ordering = ['-created_date']
@@ -165,3 +168,25 @@ class Notification(models.Model):
             self.viewed = True
             self.viewed_at = timezone.now()
             self.save()
+
+
+class WatchHistory(models.Model):
+    """Tracks actual video watching behavior"""
+    farmer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    scheme = models.ForeignKey('Scheme', on_delete=models.CASCADE)
+    started_at = models.DateTimeField(auto_now_add=True)
+    last_watched_at = models.DateTimeField(auto_now=True)
+    completed = models.BooleanField(default=False)
+    watch_duration_seconds = models.IntegerField(default=0)
+    
+    class Meta:
+        unique_together = ['farmer', 'scheme']
+
+class WatchLater(models.Model):
+    """Tracks schemes saved for later viewing"""
+    farmer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    scheme = models.ForeignKey('Scheme', on_delete=models.CASCADE)
+    saved_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['farmer', 'scheme']
