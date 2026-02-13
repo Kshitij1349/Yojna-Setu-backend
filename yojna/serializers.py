@@ -21,16 +21,40 @@ class FarmerSerializer(serializers.ModelSerializer):
 
 class SchemeSerializer(serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField()
-
+    video_url = serializers.SerializerMethodField()  # Changed method
+    is_saved = serializers.SerializerMethodField() 
+    
     class Meta:
         model = Scheme
-        fields = '__all__'
+        fields = [
+            'id', 'title', 'description', 'category',
+            'benefit_amount', 'apply_url', 'is_active',
+            'created_date', 'thumbnail', 'thumbnail_url',
+            'video', 'video_url', 'is_saved'  # ← ADD is_saved
+        ]
 
+    
     def get_thumbnail_url(self, obj):
         if obj.thumbnail:
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(obj.thumbnail.url)
+        return None
+    
+    def get_is_saved(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return WatchLater.objects.filter(
+                farmer=request.user,
+                scheme=obj
+            ).exists()
+        return False
+    
+    def get_video_url(self, obj):
+        if obj.video:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.video.url)
         return None
 
 class NotificationSerializer(serializers.ModelSerializer):

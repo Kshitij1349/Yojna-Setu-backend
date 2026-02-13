@@ -50,8 +50,6 @@ class FarmerAdmin(UserAdmin):
 
 @admin.register(Scheme)
 class SchemeAdmin(admin.ModelAdmin):
-    # form = SchemeAdminForm  # ← REMOVE THIS LINE
-    
     list_display = ('title', 'category', 'is_active', 'created_date')
     list_filter = ('category', 'is_active', 'created_date')
     search_fields = ('title', 'description')
@@ -61,12 +59,13 @@ class SchemeAdmin(admin.ModelAdmin):
             'fields': ('title', 'description', 'category')
         }),
         ('Media & Benefits', {
-            'fields': ('video_url', 'thumbnail', 'benefit_amount', 'apply_url')
+            'fields': ('video', 'thumbnail', 'benefit_amount', 'apply_url')  # Changed video_url → video
         }),
         ('Status', {
             'fields': ('is_active',)
         }),
     )
+
     
 
 

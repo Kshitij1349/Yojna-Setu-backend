@@ -72,55 +72,18 @@ class Scheme(models.Model):
         ('MARKETING', 'Marketing'),
     ]
 
-    # Reference the same districts used in your Farmer model for consistency
-    # DISTRICT_CHOICES = [
-    #     ('AHMEDNAGAR', 'Ahmednagar (Ahilyanagar)'),
-    #     ('AKOLA', 'Akola'),
-    #     ('AMRAVATI', 'Amravati'),
-    #     ('AURANGABAD', 'Aurangabad (Chhatrapati Sambhajinagar)'),
-    #     ('BEED', 'Beed'),
-    #     ('BHANDARA', 'Bhandara'),
-    #     ('BULDHANA', 'Buldhana'),
-    #     ('CHANDRAPUR', 'Chandrapur'),
-    #     ('DHULE', 'Dhule'),
-    #     ('GADCHIROLI', 'Gadchiroli'),
-    #     ('GONDIA', 'Gondia'),
-    #     ('HINGOLI', 'Hingoli'),
-    #     ('JALGAON', 'Jalgaon'),
-    #     ('JALNA', 'Jalna'),
-    #     ('KOLHAPUR', 'Kolhapur'),
-    #     ('LATUR', 'Latur'),
-    #     ('MUMBAI_CITY', 'Mumbai City'),
-    #     ('MUMBAI_SUBURBAN', 'Mumbai Suburban'),
-    #     ('NAGPUR', 'Nagpur'),
-    #     ('NANDED', 'Nanded'),
-    #     ('NANDURBAR', 'Nandurbar'),
-    #     ('NASHIK', 'Nashik'),
-    #     ('OSMANABAD', 'Osmanabad (Dharashiv)'),
-    #     ('PALGHAR', 'Palghar'),
-    #     ('PARBHANI', 'Parbhani'),
-    #     ('PUNE', 'Pune'),
-    #     ('RAIGAD', 'Raigad'),
-    #     ('RATNAGIRI', 'Ratnagiri'),
-    #     ('SANGLI', 'Sangli'),
-    #     ('SATARA', 'Satara'),
-    #     ('SINDHUDURG', 'Sindhudurg'),
-    #     ('SOLAPUR', 'Solapur'),
-    #     ('THANE', 'Thane'),
-    #     ('WARDHA', 'Wardha'),
-    #     ('WASHIM', 'Washim'),
-    #     ('YAVATMAL', 'Yavatmal'),
-    # ]
-
     title = models.CharField(max_length=255)
     description = models.TextField()
-    video_url = models.URLField(max_length=500, blank=True, null=True, help_text="YouTube or Video link")
+    
+    # CHANGED: Video upload instead of URL
+    video = models.FileField(
+        upload_to='scheme_videos/', 
+        blank=True, 
+        null=True,
+        help_text="Upload video file (MP4, AVI, MOV)"
+    )
+    
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='SUBSIDY')
-    
-    # Target districts: multiple selection allowed
-    # Note: Using a TextField or a separate M2M model is better for multiple districts
-    #target_districts = models.JSONField(help_text="List of districts where this scheme is applicable")
-    
     created_date = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     benefit_amount = models.CharField(max_length=100, blank=True, help_text="e.g., ₹6,000/वर्ष or 50% सब्सिडी")
@@ -132,7 +95,6 @@ class Scheme(models.Model):
 
     def __str__(self):
         return self.title
-    
 
 
 

@@ -90,6 +90,17 @@ class WatchLaterViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(farmer=self.request.user)
+    
+    @action(detail=True, methods=['delete'])
+    def remove_by_scheme(self, request, pk=None):
+        # Here 'pk' will be the schemeId passed from Flutter
+        queryset = WatchLater.objects.filter(farmer=request.user, scheme_id=pk)
+        
+        if queryset.exists():
+            queryset.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 
